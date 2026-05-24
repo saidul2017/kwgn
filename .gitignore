@@ -10,7 +10,7 @@ venv/
 env/
 
 # Streamlit
-.streamlit/secrets.toml
+# .streamlit/secrets.toml  <- intentionally NOT ignored: API key di-bundle
 
 # Data lokal (opsional - hapus comment kalau tidak mau commit data)
 # data/results.json
