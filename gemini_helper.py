@@ -15,7 +15,7 @@ try:
 except ImportError:  # pragma: no cover
     GENAI_AVAILABLE = False
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.0-flash"
 
 CHAT_SYSTEM_PROMPT = """Anda adalah asisten edukasi untuk mata kuliah Pendidikan Kewarganegaraan Indonesia.
 
