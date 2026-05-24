@@ -280,25 +280,9 @@ function renderStudentDashboard() {
     $('#totalQuestionsInfo').textContent = QUESTIONS.length;
     $('#mcCount').textContent = MC_QUESTIONS.length;
     $('#essayCount').textContent = ESSAY_QUESTIONS.length;
-
-    // Tampilkan input override (kosong, karena pakai default)
-    $('#geminiApiKey').value = '';
-    $('#geminiApiKey').placeholder = isUsingDefaultApiKey()
-        ? 'Default API key aktif (kosongkan untuk pakai default)'
-        : 'Masukkan Gemini API Key Anda';
 }
 
 function initStudentDashboard() {
-    $('#saveApiKey').addEventListener('click', () => {
-        const key = $('#geminiApiKey').value.trim();
-        setGeminiApiKey(key);
-        if (key) {
-            showToast('✅ Gemini API key tersimpan! Asisten AI siap digunakan.', 'success');
-        } else {
-            showToast('API key dihapus.', '');
-        }
-    });
-
     $('#startExamBtn').addEventListener('click', async () => {
         const ok = await showConfirm(
             'Mulai Ujian?',

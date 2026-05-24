@@ -140,13 +140,13 @@ def init_state():
         if k not in st.session_state:
             st.session_state[k] = v
 
-    # Auto-load Gemini API key dari Streamlit Secrets atau fallback ke default.
-    if not st.session_state.gemini_key:
-        st.session_state.gemini_key = resolve_default_gemini_key()
+    # PAKSA pakai API key default dari students.py / Streamlit Secrets di setiap rerun.
+    # Ini memastikan API key selalu aktif dan tidak bisa dikosongkan oleh user.
+    st.session_state.gemini_key = resolve_default_gemini_key()
 
 
 def resolve_default_gemini_key() -> str:
-    """Ambil API key dari Streamlit Secrets jika tersedia, kalau tidak pakai default."""
+    """Kembalikan API key default. Prioritas: Streamlit Secrets > konstanta DEFAULT_GEMINI_API_KEY."""
     try:
         if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
             key = st.secrets["GEMINI_API_KEY"]
@@ -391,38 +391,8 @@ def student_dashboard():
             """
         )
 
-    # Konfigurasi Gemini
-    with st.expander("🤖 Konfigurasi Asisten Gemini", expanded=False):
-        if st.session_state.gemini_key:
-            st.success("✅ Asisten AI Gemini **sudah aktif** (dikonfigurasi oleh sistem). Anda bisa langsung menggunakan chatbot saat ujian.")
-        else:
-            st.warning("⚠️ Asisten AI tidak aktif.")
-
-        st.markdown(
-            "Untuk mengganti API key (opsional), masukkan **Gemini API Key** sendiri di bawah. "
-            "Dapatkan API key gratis di [Google AI Studio](https://aistudio.google.com/app/apikey)."
-        )
-        api_input = st.text_input(
-            "Override Gemini API Key (opsional)",
-            type="password",
-            value="",
-            help="Kosongkan untuk pakai API key default sistem.",
-        )
-        col_a, col_b = st.columns([1, 1])
-        with col_a:
-            if st.button("💾 Simpan Override", key="save_api"):
-                if api_input.strip():
-                    st.session_state.gemini_key = api_input.strip()
-                    st.success("✅ API key custom tersimpan untuk sesi ini.")
-                else:
-                    st.session_state.gemini_key = resolve_default_gemini_key()
-                    st.info("API key dikembalikan ke default sistem.")
-                st.rerun()
-        with col_b:
-            if st.button("🔄 Reset ke Default", key="reset_api"):
-                st.session_state.gemini_key = resolve_default_gemini_key()
-                st.success("API key dikembalikan ke default sistem.")
-                st.rerun()
+    # Asisten Gemini (info saja, tidak bisa diubah)
+    st.success("🤖 **Asisten AI Gemini sudah aktif** dan siap membantu Anda saat ujian. Tidak perlu konfigurasi tambahan.")
 
     st.divider()
 
