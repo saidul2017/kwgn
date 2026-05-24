@@ -43,16 +43,21 @@ Repo sudah tersedia di: `https://github.com/saidul2017/kwgn`
 
 Streamlit akan otomatis menginstall dependencies dari `requirements.txt` dan menjalankan `streamlit_app.py`. Tunggu 1-3 menit hingga app live.
 
-### 4. (Opsional) Ganti Gemini API key di Streamlit Cloud
-Aplikasi sudah include API key default di `students.py`, tapi sebaiknya untuk produksi:
-1. Di dashboard Streamlit Cloud → klik app Anda → **Settings** → **Secrets**
-2. Tambahkan:
-   ```toml
-   GEMINI_API_KEY = "your-gemini-api-key"
-   ```
-3. Save → app akan auto-restart dengan API key tersebut.
+### 4. ⚠️ WAJIB: Set Gemini API Key di Streamlit Secrets
 
-> Aplikasi membaca API key dengan urutan prioritas: **input mahasiswa > Streamlit Secrets > default di `students.py`**.
+Aplikasi membutuhkan **Gemini API Key** untuk asisten AI dan AI grading essay.
+**Jangan** menulis API key di file repo (Google akan auto-revoke jika terdeteksi publik).
+
+Langkah:
+1. **Generate API key gratis** di https://aistudio.google.com/app/apikey
+2. Di Streamlit Cloud → klik app Anda → **Settings → Secrets**
+3. Tambahkan baris berikut, lalu **Save**:
+   ```toml
+   GEMINI_API_KEY = "AIza...PASTE_API_KEY_ANDA_DI_SINI..."
+   ```
+4. App akan auto-restart. Selesai — semua mahasiswa langsung bisa pakai asisten AI.
+
+> Jika belum diset, app **tetap berjalan** dengan grading fallback berbasis panjang & kata kunci jawaban, tetapi chatbot AI tidak aktif.
 
 ---
 

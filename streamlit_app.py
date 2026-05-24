@@ -391,8 +391,14 @@ def student_dashboard():
             """
         )
 
-    # Asisten Gemini (info saja, tidak bisa diubah)
-    st.success("🤖 **Asisten AI Gemini sudah aktif** dan siap membantu Anda saat ujian. Tidak perlu konfigurasi tambahan.")
+    # Asisten Gemini (info status)
+    if st.session_state.gemini_key:
+        st.success("🤖 **Asisten AI Gemini sudah aktif** dan siap membantu Anda saat ujian. Tidak perlu konfigurasi tambahan.")
+    else:
+        st.warning(
+            "🤖 **Asisten AI tidak aktif.** Dosen belum mengkonfigurasi Gemini API Key di server. "
+            "Anda tetap bisa mengikuti ujian — soal essay akan dinilai dengan metode fallback (panjang & kata kunci)."
+        )
 
     st.divider()
 

@@ -4,10 +4,10 @@
  * - gradeEssayWithGemini(question, answer, rubric, maxPoints): untuk grade essay
  *
  * Uses Google Generative AI REST API:
- * https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent
+ * https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
  */
 
-const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const GEMINI_STORAGE_KEY = 'kwgn_gemini_api_key';

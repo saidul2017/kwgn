@@ -51,5 +51,8 @@ const STUDENT_ROSTER = {
 
 const DEFAULT_CLASS_NAME = "PAI Kewarganegaraan 2025/2026";
 
-// Default Gemini API Key (fallback jika user belum input sendiri).
-const DEFAULT_GEMINI_API_KEY = "AIzaSyAx3TS_3KpcUGMP2YZnn2KutoLnexGQzf4";
+// Default Gemini API Key.
+// ⚠️ KOSONG by default karena API key di repo publik AKAN di-revoke otomatis
+// oleh Google. Untuk versi HTML statis, isi key di sini lalu host di tempat
+// privat (jangan commit ke repo publik):
+const DEFAULT_GEMINI_API_KEY = "";
