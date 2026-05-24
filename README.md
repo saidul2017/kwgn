@@ -11,11 +11,12 @@ Tersedia dalam **dua versi**:
 ## ✨ Fitur
 
 - 🔐 Login terpisah untuk **Mahasiswa** (password kelas) dan **Dosen** (password admin)
+- 👥 **Whitelist roster 43 mahasiswa** — login pakai dropdown nama, NIM otomatis
 - 📝 15 soal pilihan ganda + 4 soal essay = **100 poin**
 - ⏱️ Timer ujian **90 menit** dengan auto-submit
-- 🤖 Asisten chatbot **Gemini AI** (diskusi konsep, bukan jawaban)
+- 🤖 Asisten chatbot **Gemini AI** (sudah aktif default, bisa override)
 - ✅ **Auto-grading** pilihan ganda + **AI grading** untuk essay
-- 📊 Dashboard dosen: statistik, detail jawaban, ekspor CSV
+- 📊 Dashboard dosen: statistik, **roster status**, detail jawaban, ekspor CSV
 - 🛡️ Anti-cheat: NIM lock, peringatan tab switch
 - 📱 Responsive di mobile
 
@@ -42,16 +43,21 @@ Repo sudah tersedia di: `https://github.com/saidul2017/kwgn`
 
 Streamlit akan otomatis menginstall dependencies dari `requirements.txt` dan menjalankan `streamlit_app.py`. Tunggu 1-3 menit hingga app live.
 
-### 4. (Opsional) Set default Gemini API key
-Agar mahasiswa tidak perlu memasukkan API key sendiri:
-1. Di dashboard Streamlit Cloud → klik app Anda → **Settings** → **Secrets**
-2. Tambahkan:
-   ```toml
-   GEMINI_API_KEY = "your-gemini-api-key"
-   ```
-3. Save → app akan auto-restart dengan API key tersebut.
+### 4. ⚠️ WAJIB: Set Gemini API Key di Streamlit Secrets
 
-> Aplikasi akan otomatis membaca `st.secrets["GEMINI_API_KEY"]` jika tersedia, sehingga semua mahasiswa bisa langsung pakai asisten AI tanpa konfigurasi.
+Aplikasi membutuhkan **Gemini API Key** untuk asisten AI dan AI grading essay.
+**Jangan** menulis API key di file repo (Google akan auto-revoke jika terdeteksi publik).
+
+Langkah:
+1. **Generate API key gratis** di https://aistudio.google.com/app/apikey
+2. Di Streamlit Cloud → klik app Anda → **Settings → Secrets**
+3. Tambahkan baris berikut, lalu **Save**:
+   ```toml
+   GEMINI_API_KEY = "AIza...PASTE_API_KEY_ANDA_DI_SINI..."
+   ```
+4. App akan auto-restart. Selesai — semua mahasiswa langsung bisa pakai asisten AI.
+
+> Jika belum diset, app **tetap berjalan** dengan grading fallback berbasis panjang & kata kunci jawaban, tetapi chatbot AI tidak aktif.
 
 ---
 
@@ -142,6 +148,7 @@ Asisten chatbot dan AI grading essay menggunakan **Gemini API**.
 kwgn/
 ├── streamlit_app.py     # 🐍 Main Streamlit app
 ├── questions.py         # 🐍 Bank soal (Python)
+├── students.py          # 🐍 Roster mahasiswa + default API key
 ├── gemini_helper.py     # 🐍 Gemini API helper
 ├── requirements.txt     # 🐍 Dependencies
 ├── .streamlit/
@@ -153,10 +160,27 @@ kwgn/
 ├── app.js               # 🌐
 ├── gemini.js            # 🌐
 ├── questions.js         # 🌐
+├── students.js          # 🌐 Roster + default API key
 │
 ├── data/                # 💾 Auto-created (results.json, settings.json)
 └── README.md
 ```
+
+---
+
+## 👥 Mengelola Roster Mahasiswa
+
+Edit `students.py` (Streamlit) atau `students.js` (HTML versi) untuk menambah/menghapus peserta:
+
+```python
+STUDENT_ROSTER = {
+    "25104080001": "FATIHA SAJDA AJI",
+    "25104080002": "GHILMATUS SHOLIKHAH",
+    # ... tambahkan peserta baru
+}
+```
+
+Setelah edit, push ke GitHub → app auto-redeploy.
 
 ---
 

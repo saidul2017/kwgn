@@ -4,28 +4,34 @@
  * - gradeEssayWithGemini(question, answer, rubric, maxPoints): untuk grade essay
  *
  * Uses Google Generative AI REST API:
- * https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent
+ * https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
  */
 
-const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const GEMINI_STORAGE_KEY = 'kwgn_gemini_api_key';
 
 function getGeminiApiKey() {
-    return localStorage.getItem(GEMINI_STORAGE_KEY) || '';
+    // SELALU pakai DEFAULT_GEMINI_API_KEY dari students.js.
+    // User TIDAK BISA override - API key dikunci oleh dosen.
+    if (typeof DEFAULT_GEMINI_API_KEY !== 'undefined' && DEFAULT_GEMINI_API_KEY) {
+        return DEFAULT_GEMINI_API_KEY;
+    }
+    return '';
 }
 
-function setGeminiApiKey(key) {
-    if (key) {
-        localStorage.setItem(GEMINI_STORAGE_KEY, key.trim());
-    } else {
-        localStorage.removeItem(GEMINI_STORAGE_KEY);
-    }
+function setGeminiApiKey(_key) {
+    // No-op: API key dikunci, tidak bisa diubah oleh user.
+    return;
 }
 
 function hasGeminiApiKey() {
     return !!getGeminiApiKey();
+}
+
+function isUsingDefaultApiKey() {
+    return true;
 }
 
 /**

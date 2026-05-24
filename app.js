@@ -131,6 +131,39 @@ function escapeHtml(str) {
 
 // ==================== LOGIN ====================
 function initLogin() {
+    // Populate student dropdown dari roster
+    const select = $('#studentNimSelect');
+    if (select && typeof STUDENT_ROSTER !== 'undefined') {
+        const sortedNims = Object.keys(STUDENT_ROSTER).sort();
+        sortedNims.forEach(nim => {
+            const opt = document.createElement('option');
+            opt.value = nim;
+            opt.textContent = `${nim} — ${STUDENT_ROSTER[nim]}`;
+            select.appendChild(opt);
+        });
+    }
+
+    // Pre-fill default class
+    if (typeof DEFAULT_CLASS_NAME !== 'undefined') {
+        const clsInput = $('#studentClass');
+        if (clsInput && !clsInput.value) clsInput.value = DEFAULT_CLASS_NAME;
+    }
+
+    // Tampilkan info NIM/nama saat dropdown berubah
+    if (select) {
+        select.addEventListener('change', e => {
+            const nim = e.target.value;
+            const info = $('#studentInfo');
+            if (nim && STUDENT_ROSTER[nim]) {
+                $('#selectedNim').textContent = nim;
+                $('#selectedName').textContent = STUDENT_ROSTER[nim];
+                info.classList.remove('hidden');
+            } else {
+                info.classList.add('hidden');
+            }
+        });
+    }
+
     // Tab switching
     $$('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -146,20 +179,33 @@ function initLogin() {
     // Student login
     $('#studentLoginForm').addEventListener('submit', e => {
         e.preventDefault();
-        const name = $('#studentName').value.trim();
-        const nim = $('#studentNim').value.trim();
+        const nim = $('#studentNimSelect').value;
         const cls = $('#studentClass').value.trim();
         const pwd = $('#classPassword').value;
 
+        if (!nim) {
+            showLoginError('Silakan pilih nama Anda dari daftar peserta.');
+            return;
+        }
+        if (!STUDENT_ROSTER[nim]) {
+            showLoginError(`NIM ${nim} tidak terdaftar di roster kelas.`);
+            return;
+        }
+        if (!cls) {
+            showLoginError('Nama kelas wajib diisi.');
+            return;
+        }
         if (pwd !== getClassPassword()) {
             showLoginError('Password kelas salah. Silakan tanyakan kepada dosen Anda.');
             return;
         }
 
+        const name = STUDENT_ROSTER[nim];
+
         // Cek apakah NIM sudah pernah ujian
         const existing = getAllResults().find(r => r.nim === nim);
         if (existing) {
-            showLoginError(`NIM ${nim} sudah menyelesaikan ujian pada ${formatDateTime(existing.submittedAt)}. Hubungi dosen jika perlu mengulang.`);
+            showLoginError(`NIM ${nim} (${name}) sudah menyelesaikan ujian pada ${formatDateTime(existing.submittedAt)}. Hubungi dosen jika perlu mengulang.`);
             return;
         }
 
@@ -234,25 +280,9 @@ function renderStudentDashboard() {
     $('#totalQuestionsInfo').textContent = QUESTIONS.length;
     $('#mcCount').textContent = MC_QUESTIONS.length;
     $('#essayCount').textContent = ESSAY_QUESTIONS.length;
-
-    // Restore API key
-    const existingKey = getGeminiApiKey();
-    if (existingKey) {
-        $('#geminiApiKey').value = existingKey;
-    }
 }
 
 function initStudentDashboard() {
-    $('#saveApiKey').addEventListener('click', () => {
-        const key = $('#geminiApiKey').value.trim();
-        setGeminiApiKey(key);
-        if (key) {
-            showToast('✅ Gemini API key tersimpan! Asisten AI siap digunakan.', 'success');
-        } else {
-            showToast('API key dihapus.', '');
-        }
-    });
-
     $('#startExamBtn').addEventListener('click', async () => {
         const ok = await showConfirm(
             'Mulai Ujian?',
@@ -692,8 +722,65 @@ function renderLecturerDashboard() {
     $('#settingsClassPwd').value = getClassPassword();
     $('#settingsLecturerPwd').value = getLecturerPassword();
 
+    // Roster
+    renderRoster(results);
+
     // Table
     renderResultsTable(results);
+}
+
+function renderRoster(results) {
+    if (typeof STUDENT_ROSTER === 'undefined') return;
+
+    const nimToResult = {};
+    results.forEach(r => { nimToResult[r.nim] = r; });
+
+    const total = Object.keys(STUDENT_ROSTER).length;
+    const done = Object.keys(STUDENT_ROSTER).filter(nim => nimToResult[nim]).length;
+    const pending = total - done;
+
+    $('#rosterTotal').textContent = total;
+    $('#rosterDone').textContent = done;
+    $('#rosterPending').textContent = pending;
+    $('#rosterPercent').textContent = total ? `${Math.round(done / total * 100)}%` : '0%';
+
+    const filter = $('#rosterFilter').value || 'all';
+    const sortedNims = Object.keys(STUDENT_ROSTER).sort();
+    const tbody = $('#rosterTableBody');
+
+    let rows = '';
+    let counter = 0;
+    sortedNims.forEach(nim => {
+        const name = STUDENT_ROSTER[nim];
+        const r = nimToResult[nim];
+        const isDone = !!r;
+
+        if (filter === 'done' && !isDone) return;
+        if (filter === 'pending' && isDone) return;
+
+        counter++;
+        const status = isDone
+            ? '<span class="badge badge-A">✅ Sudah</span>'
+            : '<span class="badge badge-D">⏳ Belum</span>';
+        const total = isDone ? r.totalScore : '-';
+        const grade = isDone ? `<span class="badge badge-${r.grade}">${r.grade}</span>` : '-';
+        const submittedAt = isDone ? formatDateTime(r.submittedAt) : '-';
+
+        rows += `
+            <tr>
+                <td>${counter}</td>
+                <td>${escapeHtml(nim)}</td>
+                <td>${escapeHtml(name)}</td>
+                <td>${status}</td>
+                <td>${total}</td>
+                <td>${grade}</td>
+                <td>${submittedAt}</td>
+            </tr>
+        `;
+    });
+
+    if (!rows) rows = '<tr><td colspan="7" class="text-center muted">Tidak ada data sesuai filter.</td></tr>';
+    tbody.innerHTML = rows;
 }
 
 function renderResultsTable(results) {
@@ -813,6 +900,14 @@ function exportToCSV() {
 
 function initLecturerDashboard() {
     $('#exportCsvBtn').addEventListener('click', exportToCSV);
+
+    // Roster filter
+    const rosterFilter = $('#rosterFilter');
+    if (rosterFilter) {
+        rosterFilter.addEventListener('change', () => {
+            renderRoster(getAllResults());
+        });
+    }
 
     $('#clearResultsBtn').addEventListener('click', async () => {
         const ok = await showConfirm(
