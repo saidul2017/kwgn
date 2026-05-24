@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UAS Kewarganegaraan - Ujian Online</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ==================== HEADER ==================== -->
+    <header id="appHeader" class="hidden">
+        <div class="header-content">
+            <div class="brand">
+                <span class="brand-icon">🇮🇩</span>
+                <div>
+                    <h1>UAS Kewarganegaraan</h1>
+                    <p id="headerSubtitle">Ujian Akhir Semester</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span id="userInfo" class="user-info"></span>
+                <button id="logoutBtn" class="btn btn-ghost">Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== LOGIN PAGE ==================== -->
+    <section id="loginPage" class="page active">
+        <div class="login-wrap">
+            <div class="login-hero">
+                <span class="hero-emblem">🇮🇩</span>
+                <h1>Ujian Akhir Semester</h1>
+                <h2>Pendidikan Kewarganegaraan</h2>
+                <p>Sistem ujian online dengan asisten AI Gemini. Silakan pilih peran Anda untuk masuk.</p>
+                <ul class="hero-features">
+                    <li>✅ Soal Pilihan Ganda &amp; Essay</li>
+                    <li>✅ Penilaian Otomatis dengan AI</li>
+                    <li>✅ Asisten Chatbot Gemini</li>
+                    <li>✅ Dashboard Hasil untuk Dosen</li>
+                </ul>
+            </div>
+
+            <div class="login-card">
+                <div class="role-tabs">
+                    <button class="tab-btn active" data-role="student">👨‍🎓 Mahasiswa</button>
+                    <button class="tab-btn" data-role="lecturer">👨‍🏫 Dosen</button>
+                </div>
+
+                <!-- Student login -->
+                <form id="studentLoginForm" class="login-form">
+                    <h3>Login Mahasiswa</h3>
+                    <label>
+                        Nama Lengkap
+                        <input type="text" id="studentName" required placeholder="Contoh: Budi Santoso">
+                    </label>
+                    <label>
+                        NIM
+                        <input type="text" id="studentNim" required placeholder="Contoh: 2021010101">
+                    </label>
+                    <label>
+                        Kelas
+                        <input type="text" id="studentClass" required placeholder="Contoh: TI-3A">
+                    </label>
+                    <label>
+                        Password Kelas
+                        <input type="password" id="classPassword" required placeholder="Diberikan oleh dosen">
+                    </label>
+                    <button type="submit" class="btn btn-primary btn-block">Masuk Ujian</button>
+                    <p class="form-hint">Password kelas default: <code>kwgn2026</code></p>
+                </form>
+
+                <!-- Lecturer login -->
+                <form id="lecturerLoginForm" class="login-form hidden">
+                    <h3>Login Dosen</h3>
+                    <label>
+                        Nama Dosen
+                        <input type="text" id="lecturerName" required placeholder="Contoh: Dr. Andi">
+                    </label>
+                    <label>
+                        Password Dosen
+                        <input type="password" id="lecturerPassword" required placeholder="Password admin">
+                    </label>
+                    <button type="submit" class="btn btn-primary btn-block">Masuk Dashboard</button>
+                    <p class="form-hint">Password dosen default: <code>dosen2026</code></p>
+                </form>
+
+                <div id="loginError" class="alert alert-error hidden"></div>
+            </div>
+        </div>
+        <footer class="page-footer">
+            <small>© 2026 UAS Kewarganegaraan · Powered by Gemini AI</small>
+        </footer>
+    </section>
+
+    <!-- ==================== STUDENT DASHBOARD ==================== -->
+    <section id="studentDashboard" class="page">
+        <div class="container">
+            <div class="welcome-card">
+                <h2>Selamat Datang, <span id="welcomeName"></span> 👋</h2>
+                <p class="muted">Anda akan mengikuti Ujian Akhir Semester mata kuliah Pendidikan Kewarganegaraan.</p>
+
+                <div class="info-grid">
+                    <div class="info-box">
+                        <span class="info-label">Total Soal</span>
+                        <span class="info-value" id="totalQuestionsInfo">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Pilihan Ganda</span>
+                        <span class="info-value" id="mcCount">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Essay</span>
+                        <span class="info-value" id="essayCount">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Durasi</span>
+                        <span class="info-value">90 Menit</span>
+                    </div>
+                </div>
+
+                <div class="rules-box">
+                    <h3>📋 Tata Tertib Ujian</h3>
+                    <ol>
+                        <li>Bacalah setiap soal dengan teliti sebelum menjawab.</li>
+                        <li>Anda dapat berpindah antar soal dan kembali untuk merevisi jawaban.</li>
+                        <li>Asisten AI Gemini boleh dipakai untuk <strong>diskusi konsep</strong>, bukan jawaban langsung.</li>
+                        <li>Waktu ujian akan terus berjalan. Ujian akan tersubmit otomatis saat waktu habis.</li>
+                        <li>Pastikan menekan tombol "Submit Ujian" sebelum waktu habis.</li>
+                    </ol>
+                </div>
+
+                <div class="api-key-box">
+                    <h3>🤖 Konfigurasi Asisten Gemini (Opsional)</h3>
+                    <p class="muted">Untuk mengaktifkan chatbot AI, masukkan Gemini API Key Anda. API key disimpan lokal di browser.</p>
+                    <div class="api-key-input">
+                        <input type="password" id="geminiApiKey" placeholder="Masukkan Gemini API Key">
+                        <button id="saveApiKey" class="btn btn-secondary">Simpan</button>
+                    </div>
+                    <p class="form-hint">Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+                </div>
+
+                <button id="startExamBtn" class="btn btn-primary btn-large">🚀 Mulai Ujian Sekarang</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== EXAM PAGE ==================== -->
+    <section id="examPage" class="page">
+        <div class="exam-layout">
+            <aside class="exam-sidebar">
+                <div class="timer-box">
+                    <span class="timer-label">⏱️ Sisa Waktu</span>
+                    <span class="timer-value" id="timerDisplay">90:00</span>
+                </div>
+                <div class="navigator">
+                    <h4>Navigasi Soal</h4>
+                    <div id="questionNavigator" class="nav-grid"></div>
+                    <div class="navigator-legend">
+                        <span><i class="dot dot-current"></i>Sedang dikerjakan</span>
+                        <span><i class="dot dot-answered"></i>Sudah dijawab</span>
+                        <span><i class="dot dot-empty"></i>Belum dijawab</span>
+                    </div>
+                </div>
+                <button id="submitExamBtn" class="btn btn-success btn-block">✅ Submit Ujian</button>
+            </aside>
+
+            <main class="exam-main">
+                <div id="questionContainer" class="question-card"></div>
+                <div class="exam-controls">
+                    <button id="prevQuestionBtn" class="btn btn-ghost">← Sebelumnya</button>
+                    <span id="questionProgress" class="muted"></span>
+                    <button id="nextQuestionBtn" class="btn btn-primary">Selanjutnya →</button>
+                </div>
+            </main>
+
+            <!-- Floating Gemini Chat -->
+            <div id="chatWidget" class="chat-widget collapsed">
+                <button id="chatToggle" class="chat-toggle" title="Asisten Gemini">
+                    <span class="chat-icon">🤖</span>
+                </button>
+                <div class="chat-panel">
+                    <div class="chat-header">
+                        <div>
+                            <strong>Asisten Gemini</strong>
+                            <small>Tanyakan konsep, bukan jawaban</small>
+                        </div>
+                        <button id="chatClose" class="btn-icon">✕</button>
+                    </div>
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="chat-msg bot">
+                            <p>Halo! 👋 Saya asisten AI yang siap membantu Anda memahami konsep Kewarganegaraan. Saya tidak akan memberikan jawaban langsung, tapi saya bisa menjelaskan teori, sejarah, dan contohnya. Silakan bertanya!</p>
+                        </div>
+                    </div>
+                    <form id="chatForm" class="chat-input-form">
+                        <input type="text" id="chatInput" placeholder="Tanyakan sesuatu..." autocomplete="off">
+                        <button type="submit" class="btn btn-primary">Kirim</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== RESULT PAGE ==================== -->
+    <section id="resultPage" class="page">
+        <div class="container">
+            <div class="result-card">
+                <div class="result-header">
+                    <h2>🎉 Ujian Selesai!</h2>
+                    <p class="muted">Jawaban Anda telah dinilai secara otomatis.</p>
+                </div>
+
+                <div class="score-summary">
+                    <div class="score-circle">
+                        <span id="finalScore">0</span>
+                        <small>/ 100</small>
+                    </div>
+                    <div class="score-detail">
+                        <div class="score-row"><span>Pilihan Ganda</span><strong id="mcScore">-</strong></div>
+                        <div class="score-row"><span>Essay (AI Grading)</span><strong id="essayScore">-</strong></div>
+                        <div class="score-row total"><span>Total Akhir</span><strong id="totalScore">-</strong></div>
+                        <div class="score-row"><span>Predikat</span><strong id="gradeLabel">-</strong></div>
+                    </div>
+                </div>
+
+                <div id="aiFeedback" class="feedback-box">
+                    <h3>💬 Catatan AI</h3>
+                    <p id="aiFeedbackText">Memuat catatan...</p>
+                </div>
+
+                <div class="result-actions">
+                    <button id="reviewAnswersBtn" class="btn btn-secondary">📝 Lihat Pembahasan</button>
+                    <button id="finishBtn" class="btn btn-primary">Selesai</button>
+                </div>
+
+                <div id="reviewSection" class="review-section hidden"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== LECTURER DASHBOARD ==================== -->
+    <section id="lecturerDashboard" class="page">
+        <div class="container">
+            <div class="dashboard-header">
+                <div>
+                    <h2>📊 Dashboard Dosen</h2>
+                    <p class="muted">Monitor hasil ujian, kelola soal, dan unduh nilai mahasiswa.</p>
+                </div>
+                <div class="dashboard-actions">
+                    <button id="exportCsvBtn" class="btn btn-secondary">⬇️ Ekspor CSV</button>
+                    <button id="clearResultsBtn" class="btn btn-danger">🗑️ Hapus Semua</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Peserta</span>
+                    <span class="stat-value" id="statTotal">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Rata-rata Nilai</span>
+                    <span class="stat-value" id="statAvg">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Nilai Tertinggi</span>
+                    <span class="stat-value" id="statMax">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Nilai Terendah</span>
+                    <span class="stat-value" id="statMin">0</span>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>⚙️ Pengaturan Kelas</h3>
+                <div class="settings-grid">
+                    <label>
+                        Password Kelas
+                        <div class="input-group">
+                            <input type="text" id="settingsClassPwd">
+                            <button id="saveClassPwdBtn" class="btn btn-secondary">Simpan</button>
+                        </div>
+                    </label>
+                    <label>
+                        Password Dosen
+                        <div class="input-group">
+                            <input type="text" id="settingsLecturerPwd">
+                            <button id="saveLecturerPwdBtn" class="btn btn-secondary">Simpan</button>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="results-table-wrap">
+                <h3>📋 Hasil Ujian Mahasiswa</h3>
+                <div class="table-toolbar">
+                    <input type="text" id="searchInput" placeholder="🔍 Cari nama, NIM, atau kelas...">
+                </div>
+                <div class="table-scroll">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Kelas</th>
+                                <th>Pilgan</th>
+                                <th>Essay</th>
+                                <th>Total</th>
+                                <th>Predikat</th>
+                                <th>Waktu Submit</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <tr><td colspan="10" class="text-center muted">Belum ada peserta yang menyelesaikan ujian.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== DETAIL MODAL ==================== -->
+    <div id="detailModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detail Jawaban Mahasiswa</h3>
+                <button id="closeModalBtn" class="btn-icon">✕</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- ==================== SUBMIT CONFIRM MODAL ==================== -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Konfirmasi</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmCancel" class="btn btn-ghost">Batal</button>
+                <button id="confirmOk" class="btn btn-primary">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="questions.js"></script>
+    <script src="gemini.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
