@@ -53,13 +53,9 @@ STUDENT_ROSTER = {
 
 DEFAULT_CLASS_NAME = "PAI Kewarganegaraan 2025/2026"
 
-# Default Gemini API Key.
-# ⚠️ KOSONG by default karena API key di repo publik AKAN di-revoke otomatis
-# oleh Google (terdeteksi sebagai "leaked key").
-#
-# CARA SETUP YANG AMAN:
-# 1. Generate API key baru di https://aistudio.google.com/app/apikey
-# 2. Set di Streamlit Cloud: Settings → Secrets → tambahkan baris:
-#       GEMINI_API_KEY = "your-key-here"
-# 3. App akan otomatis pakai key dari secrets.
+# Default Gemini API Key — sengaja KOSONG.
+# Set API key Anda via Streamlit Cloud Secrets UI (cara aman):
+#   Settings -> Secrets -> tambahkan baris:
+#       GEMINI_API_KEY = "AIza...key-anda..."
+# App akan otomatis baca dari st.secrets["GEMINI_API_KEY"].
 DEFAULT_GEMINI_API_KEY = ""
