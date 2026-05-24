@@ -34,6 +34,7 @@ from gemini_helper import (
     grade_essay_fallback,
     generate_overall_feedback,
 )
+from students import STUDENT_ROSTER, DEFAULT_CLASS_NAME, DEFAULT_GEMINI_API_KEY
 
 # ==================== CONFIG ====================
 st.set_page_config(
@@ -138,6 +139,22 @@ def init_state():
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
+    # Auto-load Gemini API key dari Streamlit Secrets atau fallback ke default.
+    if not st.session_state.gemini_key:
+        st.session_state.gemini_key = resolve_default_gemini_key()
+
+
+def resolve_default_gemini_key() -> str:
+    """Ambil API key dari Streamlit Secrets jika tersedia, kalau tidak pakai default."""
+    try:
+        if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+            key = st.secrets["GEMINI_API_KEY"]
+            if key:
+                return str(key)
+    except Exception:
+        pass
+    return DEFAULT_GEMINI_API_KEY
 
 
 def reset_session():
@@ -266,34 +283,59 @@ def login_page():
 
         with tab_student:
             st.subheader("Login Mahasiswa")
+            st.caption(f"Daftar peserta: **{len(STUDENT_ROSTER)} mahasiswa**. Pilih nama Anda dari daftar di bawah.")
+
+            # Selectbox di luar form supaya reaktif (langsung tampilkan NIM yang dipilih)
+            nim_options = [""] + sorted(STUDENT_ROSTER.keys())
+            selected_nim = st.selectbox(
+                "Pilih nama Anda:",
+                options=nim_options,
+                format_func=lambda n: "-- Pilih dari daftar --" if not n else f"{n} — {STUDENT_ROSTER[n]}",
+                key="login_nim_select",
+            )
+
+            if selected_nim:
+                st.success(f"📛 **NIM:** `{selected_nim}` · 👤 **Nama:** {STUDENT_ROSTER[selected_nim]}")
+
             with st.form("student_login"):
-                name = st.text_input("Nama Lengkap", placeholder="Contoh: Budi Santoso")
-                nim = st.text_input("NIM", placeholder="Contoh: 2021010101")
-                cls = st.text_input("Kelas", placeholder="Contoh: TI-3A")
-                pwd = st.text_input("Password Kelas", type="password", placeholder="Diberikan oleh dosen")
-                submitted = st.form_submit_button("Masuk Ujian", type="primary", use_container_width=True)
+                cls = st.text_input("Kelas", value=DEFAULT_CLASS_NAME)
+                pwd = st.text_input(
+                    "Password Kelas",
+                    type="password",
+                    placeholder="Diberikan oleh dosen",
+                )
+                submitted = st.form_submit_button(
+                    "🚀 Masuk Ujian", type="primary", use_container_width=True
+                )
 
                 if submitted:
-                    if not all([name.strip(), nim.strip(), cls.strip(), pwd]):
-                        st.error("Semua field wajib diisi.")
+                    if not selected_nim:
+                        st.error("Silakan pilih nama Anda dari daftar di atas terlebih dahulu.")
+                    elif not cls.strip():
+                        st.error("Nama kelas wajib diisi.")
+                    elif not pwd:
+                        st.error("Password kelas wajib diisi.")
                     elif pwd != settings["class_password"]:
                         st.error("Password kelas salah. Silakan tanyakan kepada dosen.")
                     else:
                         # Cek apakah NIM sudah pernah ujian
-                        existing = next((r for r in load_results() if r["nim"] == nim.strip()), None)
+                        existing = next((r for r in load_results() if r["nim"] == selected_nim), None)
                         if existing:
-                            st.error(f"NIM {nim} sudah menyelesaikan ujian pada {format_dt(existing['submitted_at'])}. Hubungi dosen jika perlu mengulang.")
+                            st.error(
+                                f"NIM {selected_nim} ({STUDENT_ROSTER[selected_nim]}) sudah menyelesaikan ujian "
+                                f"pada {format_dt(existing['submitted_at'])}. Hubungi dosen jika perlu mengulang."
+                            )
                         else:
                             st.session_state.role = "student"
                             st.session_state.student = {
-                                "name": name.strip(),
-                                "nim": nim.strip(),
+                                "name": STUDENT_ROSTER[selected_nim],
+                                "nim": selected_nim,
                                 "class": cls.strip(),
                             }
                             st.session_state.page = "student_dashboard"
                             st.rerun()
 
-            st.caption(f"Password kelas default: `{DEFAULT_CLASS_PWD}`")
+            st.caption(f"🔑 Password kelas default: `{DEFAULT_CLASS_PWD}`")
 
         with tab_lecturer:
             st.subheader("Login Dosen")
@@ -350,41 +392,37 @@ def student_dashboard():
         )
 
     # Konfigurasi Gemini
-    with st.expander("🤖 Konfigurasi Asisten Gemini (Opsional)", expanded=not st.session_state.gemini_key):
+    with st.expander("🤖 Konfigurasi Asisten Gemini", expanded=False):
+        if st.session_state.gemini_key:
+            st.success("✅ Asisten AI Gemini **sudah aktif** (dikonfigurasi oleh sistem). Anda bisa langsung menggunakan chatbot saat ujian.")
+        else:
+            st.warning("⚠️ Asisten AI tidak aktif.")
+
         st.markdown(
-            "Untuk mengaktifkan chatbot AI dan penilaian otomatis essay, masukkan **Gemini API Key**. "
+            "Untuk mengganti API key (opsional), masukkan **Gemini API Key** sendiri di bawah. "
             "Dapatkan API key gratis di [Google AI Studio](https://aistudio.google.com/app/apikey)."
         )
-        # Cek apakah sudah ada di secrets
-        secret_key = ""
-        try:
-            secret_key = st.secrets.get("GEMINI_API_KEY", "") if hasattr(st, "secrets") else ""
-        except Exception:
-            secret_key = ""
-
-        if secret_key and not st.session_state.gemini_key:
-            st.session_state.gemini_key = secret_key
-            st.success("✅ Gemini API key terdeteksi dari secrets server.")
-
         api_input = st.text_input(
-            "Gemini API Key",
+            "Override Gemini API Key (opsional)",
             type="password",
-            value=st.session_state.gemini_key,
-            help="API key disimpan hanya selama sesi browser.",
+            value="",
+            help="Kosongkan untuk pakai API key default sistem.",
         )
-        col_a, col_b = st.columns([1, 4])
+        col_a, col_b = st.columns([1, 1])
         with col_a:
-            if st.button("Simpan", key="save_api"):
-                st.session_state.gemini_key = api_input.strip()
-                if st.session_state.gemini_key:
-                    st.success("✅ Gemini API key tersimpan untuk sesi ini.")
+            if st.button("💾 Simpan Override", key="save_api"):
+                if api_input.strip():
+                    st.session_state.gemini_key = api_input.strip()
+                    st.success("✅ API key custom tersimpan untuk sesi ini.")
                 else:
-                    st.info("API key dihapus.")
+                    st.session_state.gemini_key = resolve_default_gemini_key()
+                    st.info("API key dikembalikan ke default sistem.")
+                st.rerun()
         with col_b:
-            if st.session_state.gemini_key:
-                st.success("Asisten AI aktif")
-            else:
-                st.warning("Asisten AI nonaktif (tetap bisa ujian, essay dinilai dengan fallback)")
+            if st.button("🔄 Reset ke Default", key="reset_api"):
+                st.session_state.gemini_key = resolve_default_gemini_key()
+                st.success("API key dikembalikan ke default sistem.")
+                st.rerun()
 
     st.divider()
 
@@ -861,11 +899,14 @@ def lecturer_dashboard():
 
     st.divider()
 
-    # Tabs: Hasil | Pengaturan
-    tab_results, tab_settings = st.tabs(["📋 Hasil Ujian", "⚙️ Pengaturan"])
+    # Tabs: Hasil | Roster | Pengaturan
+    tab_results, tab_roster, tab_settings = st.tabs(["📋 Hasil Ujian", "👥 Roster Mahasiswa", "⚙️ Pengaturan"])
 
     with tab_results:
         render_results_tab(results)
+
+    with tab_roster:
+        render_roster_tab(results)
 
     with tab_settings:
         render_settings_tab(settings)
@@ -976,6 +1017,64 @@ def render_student_detail(r: dict):
             st.markdown("**Jawaban:**")
             st.text(d["user_answer"] or "(Kosong)")
             st.success(f"💬 {d['feedback']}")
+
+
+def render_roster_tab(results: list):
+    """Tampilkan status ujian per mahasiswa di roster (siapa sudah/belum ujian)."""
+    st.markdown(f"### 👥 Daftar Peserta Ujian ({len(STUDENT_ROSTER)} mahasiswa)")
+
+    # Map NIM -> result
+    nim_to_result = {r["nim"]: r for r in results}
+
+    done_count = sum(1 for nim in STUDENT_ROSTER if nim in nim_to_result)
+    pending_count = len(STUDENT_ROSTER) - done_count
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("✅ Sudah Ujian", done_count)
+    col2.metric("⏳ Belum Ujian", pending_count)
+    col3.metric("📊 Persentase", f"{(done_count / len(STUDENT_ROSTER) * 100):.0f}%")
+
+    # Filter
+    filter_status = st.radio(
+        "Filter:",
+        ["Semua", "Sudah Ujian", "Belum Ujian"],
+        horizontal=True,
+        key="roster_filter",
+    )
+
+    # Build rows
+    rows = []
+    for i, (nim, name) in enumerate(sorted(STUDENT_ROSTER.items()), 1):
+        r = nim_to_result.get(nim)
+        if r:
+            status = "✅ Sudah"
+            score = f"{r['total_score']:.1f}"
+            grade = r["grade"]
+            submitted = format_dt(r["submitted_at"])
+        else:
+            status = "⏳ Belum"
+            score = "-"
+            grade = "-"
+            submitted = "-"
+
+        # Apply filter
+        if filter_status == "Sudah Ujian" and not r:
+            continue
+        if filter_status == "Belum Ujian" and r:
+            continue
+
+        rows.append({
+            "No": i,
+            "NIM": nim,
+            "Nama": name,
+            "Status": status,
+            "Total": score,
+            "Predikat": grade,
+            "Waktu Submit": submitted,
+        })
+
+    st.markdown(f"**Menampilkan {len(rows)} peserta**")
+    st.dataframe(rows, use_container_width=True, hide_index=True)
 
 
 def render_settings_tab(settings: dict):

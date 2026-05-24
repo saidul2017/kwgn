@@ -50,16 +50,18 @@
                 <form id="studentLoginForm" class="login-form">
                     <h3>Login Mahasiswa</h3>
                     <label>
-                        Nama Lengkap
-                        <input type="text" id="studentName" required placeholder="Contoh: Budi Santoso">
+                        Pilih Nama Anda
+                        <select id="studentNimSelect" required>
+                            <option value="">-- Pilih dari daftar peserta --</option>
+                        </select>
                     </label>
-                    <label>
-                        NIM
-                        <input type="text" id="studentNim" required placeholder="Contoh: 2021010101">
-                    </label>
+                    <div id="studentInfo" class="student-info hidden">
+                        <strong>NIM:</strong> <span id="selectedNim">-</span><br>
+                        <strong>Nama:</strong> <span id="selectedName">-</span>
+                    </div>
                     <label>
                         Kelas
-                        <input type="text" id="studentClass" required placeholder="Contoh: TI-3A">
+                        <input type="text" id="studentClass" required placeholder="Contoh: PAI Kewarganegaraan 2025/2026">
                     </label>
                     <label>
                         Password Kelas
@@ -130,13 +132,17 @@
                 </div>
 
                 <div class="api-key-box">
-                    <h3>🤖 Konfigurasi Asisten Gemini (Opsional)</h3>
-                    <p class="muted">Untuk mengaktifkan chatbot AI, masukkan Gemini API Key Anda. API key disimpan lokal di browser.</p>
-                    <div class="api-key-input">
-                        <input type="password" id="geminiApiKey" placeholder="Masukkan Gemini API Key">
-                        <button id="saveApiKey" class="btn btn-secondary">Simpan</button>
-                    </div>
-                    <p class="form-hint">Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+                    <h3>🤖 Asisten Gemini AI</h3>
+                    <p class="muted">Asisten AI <strong>sudah aktif secara otomatis</strong> dengan API key default. Anda tidak perlu setup tambahan.</p>
+                    <details>
+                        <summary style="cursor:pointer;font-weight:600;">Override API Key (opsional)</summary>
+                        <p class="muted" style="margin-top:0.5rem;">Untuk pakai API key sendiri, tempel di bawah dan klik Simpan.</p>
+                        <div class="api-key-input">
+                            <input type="password" id="geminiApiKey" placeholder="Masukkan Gemini API Key Anda">
+                            <button id="saveApiKey" class="btn btn-secondary">Simpan</button>
+                        </div>
+                        <p class="form-hint">Dapatkan API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+                    </details>
                 </div>
 
                 <button id="startExamBtn" class="btn btn-primary btn-large">🚀 Mulai Ujian Sekarang</button>
@@ -291,6 +297,52 @@
             </div>
 
             <div class="results-table-wrap">
+                <h3>👥 Roster Mahasiswa</h3>
+                <p class="muted">Status ujian per peserta dari daftar kelas.</p>
+                <div class="info-grid" style="margin-bottom:1rem;">
+                    <div class="info-box">
+                        <span class="info-label">Total Peserta</span>
+                        <span class="info-value" id="rosterTotal">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Sudah Ujian</span>
+                        <span class="info-value" id="rosterDone">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Belum Ujian</span>
+                        <span class="info-value" id="rosterPending">-</span>
+                    </div>
+                    <div class="info-box">
+                        <span class="info-label">Persentase</span>
+                        <span class="info-value" id="rosterPercent">-</span>
+                    </div>
+                </div>
+                <div class="table-toolbar">
+                    <select id="rosterFilter" style="padding:0.6rem 0.85rem;border:1px solid var(--border);border-radius:8px;">
+                        <option value="all">Semua</option>
+                        <option value="done">Sudah Ujian</option>
+                        <option value="pending">Belum Ujian</option>
+                    </select>
+                </div>
+                <div class="table-scroll">
+                    <table id="rosterTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>NIM</th>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Predikat</th>
+                                <th>Waktu Submit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rosterTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="results-table-wrap">
                 <h3>📋 Hasil Ujian Mahasiswa</h3>
                 <div class="table-toolbar">
                     <input type="text" id="searchInput" placeholder="🔍 Cari nama, NIM, atau kelas...">
@@ -353,6 +405,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="students.js"></script>
     <script src="questions.js"></script>
     <script src="gemini.js"></script>
     <script src="app.js"></script>

@@ -13,7 +13,13 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 const GEMINI_STORAGE_KEY = 'kwgn_gemini_api_key';
 
 function getGeminiApiKey() {
-    return localStorage.getItem(GEMINI_STORAGE_KEY) || '';
+    // Priority: user-saved key > default key from students.js (jika tersedia)
+    const userKey = localStorage.getItem(GEMINI_STORAGE_KEY);
+    if (userKey) return userKey;
+    if (typeof DEFAULT_GEMINI_API_KEY !== 'undefined' && DEFAULT_GEMINI_API_KEY) {
+        return DEFAULT_GEMINI_API_KEY;
+    }
+    return '';
 }
 
 function setGeminiApiKey(key) {
@@ -26,6 +32,11 @@ function setGeminiApiKey(key) {
 
 function hasGeminiApiKey() {
     return !!getGeminiApiKey();
+}
+
+function isUsingDefaultApiKey() {
+    return !localStorage.getItem(GEMINI_STORAGE_KEY) &&
+        typeof DEFAULT_GEMINI_API_KEY !== 'undefined' && !!DEFAULT_GEMINI_API_KEY;
 }
 
 /**
